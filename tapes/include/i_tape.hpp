@@ -19,7 +19,7 @@ namespace tape {
 
         virtual bool prev() = 0;
         virtual bool next() = 0;
-        // reverse read from [end] to -> [start]
+        // reverse read and write from [end] to -> [start]
         virtual void reverse() = 0;
 
         // Length in number of elements
