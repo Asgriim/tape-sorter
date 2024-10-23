@@ -37,7 +37,7 @@ namespace tape {
         //todo add config
         //todo add delays
         //File tape takes ownership for file descriptor
-        FileTape(const int32_t fd, const uint64_t fileLength) : MmapFileHandle(fd, fileLength - (fileLength % sizeof(T)) ) {
+        FileTape(const int32_t fd, const uint64_t fileLength) : m_fileHandle(fd, fileLength - (fileLength % sizeof(T)) ) {
             m_length = fileLength / m_offset;
 
             m_startPtr = reinterpret_cast<char*>(m_fileHandle.mmapAddr);
