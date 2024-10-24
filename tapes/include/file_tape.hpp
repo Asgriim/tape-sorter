@@ -9,7 +9,7 @@
 #include <type_traits>
 #include <cstring>
 #include "i_tape.hpp"
-
+#include "config/config.hpp"
 
 namespace tape {
 
@@ -37,7 +37,9 @@ namespace tape {
         //todo add config
         //todo add delays
         //File tape takes ownership for file descriptor
-        FileTape(const int32_t fd, const uint64_t fileLength) : m_fileHandle(fd, fileLength - (fileLength % sizeof(T)) ) {
+        explicit FileTape(const int32_t fd, const uint64_t fileLength, const Config &config) :
+                                                                            m_fileHandle(fd, fileLength - (fileLength % sizeof(T))),
+                                                                            m_config(config) {
             m_length = fileLength / m_offset;
 
             m_startPtr = reinterpret_cast<char*>(m_fileHandle.mmapAddr);
@@ -46,6 +48,9 @@ namespace tape {
         }
 
         T read() override {
+            if (end()) {
+                throw std::runtime_error("File tape read out of bounds");
+            }
             T elem;
             std::memcpy(reinterpret_cast<char*>(&elem), m_currPtr, sizeof(T));
             return elem;
@@ -66,19 +71,29 @@ namespace tape {
 
         bool next() override {
             char *next = m_currPtr + m_offset ;
-            if (next == m_endPtr) {
+            if (end()) {
                 return false;
             }
             m_currPtr = next;
             return true;
         }
 
+        bool end() override {
+            return m_currPtr == m_endPtr;
+        }
+
         void reverse() override {
             //just like in std::vector:
             // m_endPtr points to to the element right after the last
             // we need to maintain this after reverse
+            if (end()) {
+                m_currPtr -= m_offset;
+            }
+
             m_startPtr -= m_offset;
             m_endPtr   -= m_offset;
+
+
 
             std::swap(m_startPtr, m_endPtr);
             m_offset *= -1;
@@ -92,6 +107,7 @@ namespace tape {
 
     private:
         MmapFileHandle m_fileHandle;
+        Config m_config;
         int64_t m_offset = sizeof(T);
         uint64_t m_length;
         char *m_startPtr;
