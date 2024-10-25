@@ -17,3 +17,4 @@ file(GLOB_RECURSE TEST_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 
 add_executable(tests main.cpp  ${SRC_FILES} ${TEST_FILES})
 target_link_libraries(tests gtest_main)
+target_compile_definitions(tests PRIVATE TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/test_data/")

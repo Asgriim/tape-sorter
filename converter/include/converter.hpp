@@ -26,9 +26,8 @@ namespace tape {
             istream.open(inpFile.data());
             ostream.open(outFile.data(), std::ios::out | std::ios::binary);
 
-            while (!istream.eof()) {
-                T elem;
-                istream >> elem;
+            T elem;
+            while (istream >> elem) {
                 writeToTapeFile(elem, ostream);
             }
         }
