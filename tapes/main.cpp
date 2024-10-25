@@ -27,14 +27,12 @@ int main(int argc, char *argv[]) {
     }
 
     if (inFile.empty() || outFile.empty()) {
-        //todo add err mesg
-        std::cerr << "";
+        std::cerr << "ERROR: too few arguments \n expected use:\n tape-sorter -i=inp_tape -o=out_tape -c=config.txt\n" ;
         return -1;
     }
 
     if (!std::filesystem::exists(inFile)) {
-        //todo add err mesg
-        std::cerr << "";
+        std::cerr << "input tape file not found\n";
         return -1;
     }
 
