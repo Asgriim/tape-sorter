@@ -2,6 +2,7 @@
 #define TAPE_CONFIG_HPP
 
 #include <cstdint>
+#include <string_view>
 
 namespace tape {
     struct Config {
@@ -10,5 +11,7 @@ namespace tape {
         int32_t shiftDelay = 0;
         int32_t inMemoryLimit = INT32_MAX;
     };
+
+    Config read_conf(std::string_view path);
 }
 #endif //TAPE_CONFIG_HPP

@@ -8,10 +8,15 @@
 #include <stdexcept>
 #include <type_traits>
 #include <cstring>
+#include <chrono>
+#include <thread>
 #include "i_tape.hpp"
 #include "config/config.hpp"
 
+
 namespace tape {
+    using ms = std::chrono::milliseconds;
+    namespace thread = std::this_thread;
 
     struct MmapFileHandle {
         MmapFileHandle(int32_t fd, uint64_t length);
@@ -31,11 +36,10 @@ namespace tape {
 
 
     template <typename T>
+
     class FileTape final : public ITape<T> {
+        static_assert(std::is_trivially_copyable_v<T>);
     public:
-        static_assert(std::is_trivially_copyable_v<T> == true);
-        //todo add config
-        //todo add delays
         //File tape takes ownership for file descriptor
         explicit FileTape(const int32_t fd, const uint64_t fileLength, const Config &config) :
                                                                             m_fileHandle(fd, fileLength - (fileLength % sizeof(T))),
@@ -51,12 +55,21 @@ namespace tape {
             if (end()) {
                 throw std::runtime_error("File tape read out of bounds");
             }
+
+            thread::sleep_for(ms(m_config.readDelay));
+
             T elem;
             std::memcpy(reinterpret_cast<char*>(&elem), m_currPtr, sizeof(T));
             return elem;
         }
 
         void write(const T &elem) override {
+            if (end()) {
+                throw std::runtime_error("File tape write out of bounds");
+            }
+
+            thread::sleep_for(ms(m_config.writeDelay));
+
             std::memcpy(m_currPtr, reinterpret_cast<const char*>(&elem), sizeof(T));
         }
 
@@ -65,6 +78,9 @@ namespace tape {
             if (m_currPtr == m_startPtr) {
                 return false;
             }
+
+            thread::sleep_for(ms(m_config.shiftDelay));
+
             m_currPtr -= m_offset;
             return true;
         }
@@ -74,6 +90,9 @@ namespace tape {
             if (end()) {
                 return false;
             }
+
+            thread::sleep_for(ms(m_config.shiftDelay));
+
             m_currPtr = next;
             return true;
         }

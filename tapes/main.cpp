@@ -1,48 +1,56 @@
-
-#include "file_tape.hpp"
-#include <filesystem>
 #include <iostream>
-#include <fcntl.h>
-#include <random>
-#include <fstream>
+#include <filesystem>
+#include "config/config.hpp"
+#include "tape_sorter.hpp"
 
 int main(int argc, char *argv[]) {
-//    std::string_view file = "/home/asgrim/CLionProjects/tape/tape1";
-//    uint64_t fileSz = std::filesystem::file_size(file);
-//    int32_t fd = open(file.data(), O_RDWR);
-//    std::cout << "fd : " << fd << " sz : " << fileSz << "\n";
-//    tape::FileTape<int32_t> fileTape(fd, fileSz);
-//
-//    do {
-//        std::cout << fileTape.read() << "\n";
-//    } while (fileTape.next());
-//
-//    fileTape.reverse();
-//
-//    std::cout << "reversed" << "\n";
-//
-//    do {
-//        std::cout << fileTape.read() << "\n";
-//    } while (fileTape.next());
-//
-//    fileTape.reverse();
-//    std::cout << "reversed 2" << "\n";
 
-    std::random_device rd;
+    std::string inFile, outFile, confFile;
+    int64_t opt = 0;
 
-    // Initialize the random number generator (Mersenne Twister engine)
-    std::mt19937 gen(rd());
-
-    // Define the range for random integers (e.g., between 1 and 100)
-    std::uniform_int_distribution<> distr(-1000, 1000);
-    std::ofstream ofstream("/home/asgrim/CLionProjects/tape/test/test_data/tape_100.txt");
-
-    // Generate and print 5 random integers
-    for (int i = 0; i < 100; ++i) {
-        int random_number = distr(gen);
-        ofstream << random_number << "\n";
+    while (opt != -1) {
+        opt = getopt(argc, argv, "i:o:c:");
+        switch (opt) {
+            case 'i': {
+                inFile = optarg;
+                break;
+            }
+            case 'o': {
+                outFile = optarg;
+                break;
+            }
+            case 'c': {
+                confFile = optarg;
+                break;
+            }
+        }
     }
 
+    if (inFile.empty() || outFile.empty()) {
+        //todo add err mesg
+        std::cerr << "";
+        return -1;
+    }
+
+    if (!std::filesystem::exists(inFile)) {
+        //todo add err mesg
+        std::cerr << "";
+        return -1;
+    }
+
+    tape::Config config = tape::read_conf(confFile);
+
+    int64_t fileSz = std::filesystem::file_size(inFile);
+    int32_t fdIn = open(inFile.data(), O_RDWR);
+
+    int32_t fdOut = open(inFile.data(), O_RDWR | O_CREAT, S_IRWXU);
+    ftruncate(fdOut, fileSz);
+
+    tape::FileTape<int32_t> inTape(fdIn, fileSz, config);
+    tape::FileTape<int32_t> outTape(fdOut, fileSz, config);
+
+    tape::Sorter<int32_t> sorter(config);
+    sorter.mergeSort(inTape, outTape);
 
     return 0;
 }

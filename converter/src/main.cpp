@@ -3,7 +3,6 @@
 #include <getopt.h>
 
 
-//todo add options -x from text -t from tape
 int main(int argc, char *argv[]) {
     std::string_view errMessage = "ERROR: too few arguments \n expected use:\n converter <opt> <input> <output>\n" ;
 

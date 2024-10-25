@@ -16,7 +16,6 @@
 #include<string>
 #include<stdexcept>
 #include<algorithm>
-
 namespace CFG {
 
 const std::string DEF_CH = "=";
