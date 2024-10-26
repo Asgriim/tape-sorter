@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (inFile.empty() || outFile.empty()) {
-        std::cerr << "ERROR: too few arguments \n expected use:\n tape-sorter -i=inp_tape -o=out_tape -c=config.txt\n" ;
+        std::cerr << "ERROR: too few arguments \n expected use:\n tape-sorter -i <inp_tape> -o <out_tape> -c config.txt\n" ;
         return -1;
     }
 
@@ -39,9 +39,9 @@ int main(int argc, char *argv[]) {
     tape::Config config = tape::read_conf(confFile);
 
     int64_t fileSz = std::filesystem::file_size(inFile);
-    int32_t fdIn = open(inFile.data(), O_RDWR);
 
-    int32_t fdOut = open(inFile.data(), O_RDWR | O_CREAT, S_IRWXU);
+    int32_t fdIn = open(inFile.data(), O_RDWR);
+    int32_t fdOut = open(outFile.data(), O_RDWR | O_CREAT, S_IRWXU);
     ftruncate(fdOut, fileSz);
 
     tape::FileTape<int32_t> inTape(fdIn, fileSz, config);
