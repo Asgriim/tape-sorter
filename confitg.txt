@@ -1,4 +1,4 @@
 read_delay=2
 write_delay=4
-shiftDelay=1
+shift_delay=1
 in_memory_limit=3
