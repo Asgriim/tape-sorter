@@ -10,16 +10,19 @@
 #include <cstring>
 #include <chrono>
 #include <thread>
+#include <fcntl.h>
 #include "i_tape.hpp"
 #include "config/config.hpp"
 
 
 namespace tape {
-    using ms = std::chrono::milliseconds;
+    namespace fs = std::filesystem;
     namespace thread = std::this_thread;
 
+    using ms = std::chrono::milliseconds;
+
     struct MmapFileHandle {
-        MmapFileHandle(int32_t fd, uint64_t length);
+        MmapFileHandle(std::string_view fileName, uint64_t fileLength);
         ~MmapFileHandle();
 
         MmapFileHandle(const MmapFileHandle&) = delete;
@@ -31,7 +34,8 @@ namespace tape {
         int32_t fd = 0;
         void *mmapAddr = nullptr;
         uint64_t length = 0;
-
+        int32_t flags = O_CREAT | O_RDWR;
+        int32_t perms = S_IRWXU ;
     };
 
 
@@ -40,12 +44,12 @@ namespace tape {
     class FileTape final : public ITape<T> {
         static_assert(std::is_trivially_copyable_v<T>);
     public:
-        //File tape takes ownership for file descriptor
-        explicit FileTape(const int32_t fd, const uint64_t fileLength, const Config &config) :
-                                                                            m_fileHandle(fd, fileLength - (fileLength % sizeof(T))),
-                                                                            m_config(config) {
-            m_length = fileLength / m_offset;
 
+
+        explicit FileTape(std::string_view fileName, uint64_t length, const Config &config) :
+                                                                            m_length(length),
+                                                                            m_fileHandle(fileName, length * sizeof (T)),
+                                                                            m_config(config) {
             m_startPtr = reinterpret_cast<char*>(m_fileHandle.mmapAddr);
             m_endPtr = m_startPtr + m_fileHandle.length;
             m_currPtr = m_startPtr;

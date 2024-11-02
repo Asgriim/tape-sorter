@@ -1,9 +1,13 @@
 #include "file_tape.hpp"
+#include <filesystem>
 
-tape::MmapFileHandle::MmapFileHandle(int32_t fd, uint64_t length) : fd(fd), length(length) {
+
+tape::MmapFileHandle::MmapFileHandle(std::string_view fileName, uint64_t fileLength) : length(fileLength) {
+    fd = open(fileName.data(), flags, perms);
+    ftruncate(fd, fileLength);
     mmapAddr = mmap(nullptr, length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
-    if (mmapAddr == MAP_FAILED) {
+    if (fd == -1 || mmapAddr == MAP_FAILED) {
         throw std::runtime_error("Failed to initialize File tape\n");
     }
     
@@ -37,3 +41,5 @@ tape::MmapFileHandle::~MmapFileHandle() {
         close(fd);
     }
 }
+
+

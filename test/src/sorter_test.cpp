@@ -1,14 +1,12 @@
 #include <gtest/gtest.h>
 #include "file_tape.hpp"
 #include <fstream>
-#include "fcntl.h"
 #include <filesystem>
-#include "tape_sorter.hpp"
+#include "file_tape_sorter.hpp"
 
 struct SortTapeEnv : public testing::Test {
     tape::Config config;
-    int32_t inpFd, outFd;
-    int64_t tapeFileSz;
+    int64_t tapeLength = 100;
 
     std::string testDir = TEST_DATA_DIR;
     std::string inpFile;
@@ -20,6 +18,7 @@ struct SortTapeEnv : public testing::Test {
         config.inMemoryLimit = 3;
 
         inpFile = testDir + "tape_100";
+        outFile = testDir + "tmp_sort";
         std::ifstream ifstream(inpFile, std::ios::binary);
 
         while (!ifstream.eof()) {
@@ -30,14 +29,6 @@ struct SortTapeEnv : public testing::Test {
         }
 
         std::sort(sorted.begin(), sorted.end());
-
-        inpFd = open(inpFile.data(), O_RDWR);
-
-        tapeFileSz = std::filesystem::file_size(inpFile);
-
-        outFile = testDir + "tmp_sort";
-        outFd = open(outFile.data(), O_RDWR | O_CREAT, S_IRWXU);
-        ftruncate(outFd, tapeFileSz);
     }
 
     ~SortTapeEnv() override {
@@ -48,12 +39,12 @@ struct SortTapeEnv : public testing::Test {
 
 
 TEST_F(SortTapeEnv, SortTest) {
-    tape::Sorter<int32_t> sorter(config);
+    tape::FileTapeSorter<int32_t> sorter(config);
 
-    tape::FileTape<int32_t> inTape(inpFd, tapeFileSz, config);
-    tape::FileTape<int32_t> outTape(outFd, tapeFileSz, config);
+    tape::FileTape<int32_t> inTape(inpFile, tapeLength, config);
+    tape::FileTape<int32_t> outTape(outFile, tapeLength, config);
 
-    sorter.mergeSort(inTape, outTape);
+    sorter.mergeSort(&inTape, &outTape);
 
     while (outTape.prev()) {
 

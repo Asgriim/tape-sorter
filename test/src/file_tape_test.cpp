@@ -7,6 +7,7 @@
 struct FileTapeEnv : public testing::Test {
     std::vector<int32_t> vector;
     tape::Config config;
+    uint64_t tapeLength = 100;
 
     FileTapeEnv() {
         std::string dir = TEST_DATA_DIR;
@@ -25,9 +26,7 @@ struct FileTapeEnv : public testing::Test {
     tape::FileTape<int32_t> createFileTape() const {
         std::string dir = TEST_DATA_DIR;
         std::string binTape = dir + "tape_100";
-        int32_t fd = open(binTape.data(), O_RDWR);
-
-        tape::FileTape<int32_t> fileTape(fd, std::filesystem::file_size(binTape), config);
+        tape::FileTape<int32_t> fileTape(binTape, tapeLength, config);
 
         return fileTape;
     }
